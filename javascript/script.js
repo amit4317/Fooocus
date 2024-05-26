@@ -168,8 +168,8 @@ function initStylePreviewOverlay() {
             "fooocus_v2",
             name.toLowerCase().replaceAll(" ", "_")
         ).replaceAll("\\", "\\\\")}")`;
-
-        tooltip.textContent = name;
+        const extraText = " - This is extra text";
+        tooltip.textContent = name + extraText;
 
         function onMouseLeave() {
             overlayVisible = false;
