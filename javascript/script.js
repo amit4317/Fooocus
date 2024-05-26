@@ -155,29 +155,39 @@ function initStylePreviewOverlay() {
     overlay.appendChild(tooltip);
     overlay.id = 'stylePreviewOverlay';
     document.body.appendChild(overlay);
-    document.addEventListener('mouseover', function (e) {
-        const label = e.target.closest('.style_selections label');
-        if (!label) return;
-        label.removeEventListener("mouseout", onMouseLeave);
-        label.addEventListener("mouseout", onMouseLeave);
-        overlayVisible = true;
-        overlay.style.opacity = "1";
-        const originalText = label.querySelector("span").getAttribute("data-original-text");
-        const name = originalText || label.querySelector("span").textContent;
-        overlay.style.backgroundImage = `url("${samplesPath.replace(
-            "fooocus_v2",
-            name.toLowerCase().replaceAll(" ", "_")
-        ).replaceAll("\\", "\\\\")}")`;
-        const extraText = " - This is extra text";
-        tooltip.textContent = name + extraText;
 
-        function onMouseLeave() {
-            overlayVisible = false;
-            overlay.style.opacity = "0";
-            overlay.style.backgroundImage = "";
-            label.removeEventListener("mouseout", onMouseLeave);
-        }
-    });
+    // Load JSON data
+    fetch('/sdxl_styles/sdxl_styles_fooocus.json')
+        .then(response => response.json())
+        .then(stylesData => {
+            document.addEventListener('mouseover', function (e) {
+                const label = e.target.closest('.style_selections label');
+                if (!label) return;
+                label.removeEventListener("mouseout", onMouseLeave);
+                label.addEventListener("mouseout", onMouseLeave);
+                overlayVisible = true;
+                overlay.style.opacity = "1";
+                const originalText = label.querySelector("span").getAttribute("data-original-text");
+                const name = originalText || label.querySelector("span").textContent;
+                overlay.style.backgroundImage = `url("${samplesPath.replace(
+                    "fooocus_v2",
+                    name.toLowerCase().replaceAll(" ", "_")
+                ).replaceAll("\\", "\\\\")}")`;
+
+                // Find the corresponding style in JSON data
+                const style = stylesData.find(style => style.name === name);
+                const extraText = style ? style.prompt || style.negative_prompt : "";
+                tooltip.textContent = name + " - " + extraText;
+
+                function onMouseLeave() {
+                    overlayVisible = false;
+                    overlay.style.opacity = "0";
+                    overlay.style.backgroundImage = "";
+                    label.removeEventListener("mouseout", onMouseLeave);
+                }
+            });
+        });
+
     document.addEventListener('mousemove', function (e) {
         if (!overlayVisible) return;
         overlay.style.left = `${e.clientX}px`;
@@ -185,6 +195,7 @@ function initStylePreviewOverlay() {
         overlay.className = e.clientY > window.innerHeight / 2 ? "lower-half" : "upper-half";
     });
 }
+
 
 /**
  * checks that a UI element is not in another hidden element or tab content
